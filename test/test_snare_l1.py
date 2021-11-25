@@ -45,7 +45,7 @@ seeds = [0, 1, 2]
 latent_dims = [4, 8, 32]
 reg_ds = [1, 10]
 reg_gs = [0.01, 1, 10]
-reg_mmds = [1, 10, 15, 20, 30]
+reg_mmds = [1, 10, 20, 30]
 
 latent_dim = latent_dims[eval(sys.argv[1])]
 reg_d = reg_ds[eval(sys.argv[2])]
@@ -59,20 +59,22 @@ n_epochs = 500
 use_anchor = False
 ts = [30, 50, 70]
 use_potential = True
+norm = "l1"
 
 print("Random seed: " + str(seed))
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 np.random.seed(seed)
 
-rna_dataset = dataset.braincortex_rna(counts_dir = "../data/snare-seq/counts_rna.csv", 
-                                      anno_dir = "../data/snare-seq/anno.txt",anchor = None)
-atac_dataset = dataset.braincortex_atac(counts_dir = "../data/snare-seq/counts_atac.npz", 
-                                        anno_dir = "../data/snare-seq/anno.txt",anchor = None)
-coarse_reg = torch.FloatTensor(load_npz("../data/snare-seq/gact.npz").T.todense()).to(device)  
+counts_rna = pd.read_csv("../data/snare-seq-1000/counts_rna.csv", index_col = 0).values
+counts_atac = pd.read_csv("../data/snare-seq-1000/counts_atac.csv", index_col = 0).values
+label_rna = pd.read_csv("../data/snare-seq-1000/anno.txt", header = None)
+label_atac = pd.read_csv("../data/snare-seq-1000/anno.txt", header = None)
+rna_dataset = dataset.dataset(counts = counts_rna, anchor = None)
+atac_dataset = dataset.dataset(counts = counts_atac, anchor = None)
+coarse_reg = torch.FloatTensor(pd.read_csv("../data/snare-seq-1000/region2gene.csv", sep = ",", index_col = 0).values).to(device)
 
 batch_size = int(max([len(rna_dataset),len(atac_dataset)])/4)
-libsize = rna_dataset.get_libsize()
 
 train_rna_loader = DataLoader(rna_dataset, batch_size = batch_size, shuffle = True)
 train_atac_loader = DataLoader(atac_dataset, batch_size = batch_size, shuffle = True)
@@ -97,6 +99,9 @@ dist_rna = diff.diffu_distance(rna_dataset.counts.numpy(), ts = ts,
 dist_atac = diff.diffu_distance(atac_dataset.counts.numpy(), ts = ts,
                                 use_potential = use_potential, dr = "lsi", n_components = 30)
 
+# quantile normalization
+# dist_atac = diff.quantile_norm(dist_atac, reference = dist_rna.reshape(-1), replace = True)
+
 dist_rna = dist_rna/np.linalg.norm(dist_rna)
 dist_atac = dist_atac/np.linalg.norm(dist_atac)
 dist_rna = torch.FloatTensor(dist_rna).to(device)
@@ -114,16 +119,16 @@ opt_dict = {"gene_act": opt_genact, "encoder": opt_encoder}
 # training models
 train.match_latent(model = model_dict, opts = opt_dict, dist_atac = dist_atac, dist_rna = dist_rna, 
                 data_loader_rna = train_rna_loader, data_loader_atac = train_atac_loader, n_epochs = EMBED_CONFIG["n_epochs"], 
-                reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = "l2", 
+                reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = norm, 
                 mode = EMBED_CONFIG["l_dist_type"])
 
 with torch.no_grad():
     z_rna = model_dict["encoder"](rna_dataset.counts.to(device)).cpu().detach()
     z_atac = model_dict["encoder"](model_dict["gene_act"](atac_dataset.counts.to(device))).cpu().detach()
 
-np.save(file = "../test/results_snare/z_rna_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".npy", arr = z_rna.numpy())
-np.save(file = "../test/results_snare/z_atac_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".npy", arr = z_atac.numpy())
-torch.save(model_dict, "../test/results_snare/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".pth")
+np.save(file = "../test/results_snare/models_full/z_rna_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l1.npy", arr = z_rna.numpy())
+np.save(file = "../test/results_snare/models_full/z_atac_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l1.npy", arr = z_atac.numpy())
+torch.save(model_dict, "../test/results_snare/models_full/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l1.pth")
 
 # calculate the neighborhood overlap score
 score = bmk.neigh_overlap(z_rna, z_atac, k = 50)

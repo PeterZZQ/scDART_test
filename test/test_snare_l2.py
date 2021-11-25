@@ -46,7 +46,7 @@ seeds = [0, 1, 2]
 latent_dims = [4, 8, 32]
 reg_ds = [1, 10]
 reg_gs = [0.01, 1, 10]
-reg_mmds = [1, 10, 15, 20, 30]
+reg_mmds = [1, 10, 20, 30]
 '''
 latent_dim = latent_dims[eval(sys.argv[1])]
 reg_d = reg_ds[eval(sys.argv[2])]
@@ -60,15 +60,17 @@ n_epochs = 500
 use_anchor = False
 ts = [30, 50, 70]
 use_potential = True
+norm = "l1"
 
-rna_dataset = dataset.braincortex_rna(counts_dir = "../data/snare-seq/counts_rna.csv", 
-                                    anno_dir = "../data/snare-seq/anno.txt",anchor = None)
-atac_dataset = dataset.braincortex_atac(counts_dir = "../data/snare-seq/counts_atac.npz", 
-                                        anno_dir = "../data/snare-seq/anno.txt",anchor = None)
-coarse_reg = torch.FloatTensor(load_npz("../data/snare-seq/gact.npz").T.todense()).to(device)  
+counts_rna = pd.read_csv("../data/snare-seq-500/counts_rna.csv", index_col = 0).values
+counts_atac = pd.read_csv("../data/snare-seq-500/counts_atac.csv", index_col = 0).values
+label_rna = pd.read_csv("../data/snare-seq-500/anno.txt", header = None)
+label_atac = pd.read_csv("../data/snare-seq-500/anno.txt", header = None)
+rna_dataset = dataset.dataset(counts = counts_rna, anchor = None)
+atac_dataset = dataset.dataset(counts = counts_atac, anchor = None)
+coarse_reg = torch.FloatTensor(pd.read_csv("../data/snare-seq-500/region2gene.csv", sep = ",", index_col = 0).values).to(device)
 
 batch_size = int(max([len(rna_dataset),len(atac_dataset)])/4)
-libsize = rna_dataset.get_libsize()
 
 scores = pd.DataFrame(columns = ["model", "latent_dim", "reg_d", "reg_g", "reg_mmd", "seed", "neigh_overlap", "mse", "mse_norm", "pearson"])
 
@@ -93,7 +95,7 @@ scores = scores.append({
             "spearman": spearman
         }, ignore_index = True)
 
-for latent_dim in [latent_dims[0]]:
+for latent_dim in latent_dims:
     for reg_d in [reg_ds[0]]:
         for reg_g in reg_gs:
             for reg_mmd in reg_mmds:
@@ -126,6 +128,9 @@ for latent_dim in [latent_dims[0]]:
                     dist_atac = diff.diffu_distance(atac_dataset.counts.numpy(), ts = ts,
                                                     use_potential = use_potential, dr = "lsi", n_components = 30)
 
+                    # quantile normalization
+                    # dist_atac = diff.quantile_norm(dist_atac, reference = dist_rna.reshape(-1), replace = True)
+
                     dist_rna = dist_rna/np.linalg.norm(dist_rna)
                     dist_atac = dist_atac/np.linalg.norm(dist_atac)
                     dist_rna = torch.FloatTensor(dist_rna).to(device)
@@ -143,19 +148,19 @@ for latent_dim in [latent_dims[0]]:
                     # training models
                     train.match_latent(model = model_dict, opts = opt_dict, dist_atac = dist_atac, dist_rna = dist_rna, 
                                     data_loader_rna = train_rna_loader, data_loader_atac = train_atac_loader, n_epochs = EMBED_CONFIG["n_epochs"], 
-                                    reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = "l2", 
+                                    reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = norm, 
                                     mode = EMBED_CONFIG["l_dist_type"])
 
                     with torch.no_grad():
                         z_rna = model_dict["encoder"](rna_dataset.counts.to(device)).cpu().detach()
                         z_atac = model_dict["encoder"](model_dict["gene_act"](atac_dataset.counts.to(device))).cpu().detach()
 
-                    np.save(file = "../test/results_snare/z_rna_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".npy", arr = z_rna.numpy())
-                    np.save(file = "../test/results_snare/z_atac_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".npy", arr = z_atac.numpy())
-                    torch.save(model_dict, "../test/results_snare/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + ".pth")
+                    np.save(file = "../test/results_snare/models/z_rna_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l2.npy", arr = z_rna.numpy())
+                    np.save(file = "../test/results_snare/models/z_atac_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l2.npy", arr = z_atac.numpy())
+                    torch.save(model_dict, "../test/results_snare/models/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l2.pth")
                     '''
 
-                    model_dict = torch.load("../test/results_snare/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l1_quant.pth", map_location = device)
+                    model_dict = torch.load("../test/results_snare/models/model_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_l2.pth", map_location = device)
                     with torch.no_grad():
                         z_rna = model_dict["encoder"](rna_dataset.counts.to(device)).cpu().detach()
                         z_atac = model_dict["encoder"](model_dict["gene_act"](atac_dataset.counts.to(device))).cpu().detach()
@@ -195,49 +200,7 @@ for latent_dim in [latent_dims[0]]:
                                 "spearman": spearman
                             }, ignore_index = True)
 
-scores.to_csv("results_snare/scores_l1_quantile.csv")
-# In[]
-scores = pd.read_csv("results_snare/scores_l1.csv")
-import seaborn as sns
-fig = plt.figure(figsize = (30,7))
-axs = fig.subplots(nrows = 1, ncols = 3)
-sns.boxplot(data = scores, x = "reg_g", y = "mse", hue = "reg_mmd", ax = axs[0])
-sns.boxplot(data = scores, x = "reg_g", y = "mse_norm", hue = "reg_mmd", ax = axs[1])
-sns.boxplot(data = scores, x = "reg_g", y = "pearson", hue = "reg_mmd", ax = axs[2])
-plt.tight_layout()
+scores.to_csv("results_snare/scores_l2.csv")
 
-
-scores = pd.read_csv("results_snare/scores_l2.csv")
-import seaborn as sns
-fig = plt.figure(figsize = (30,7))
-axs = fig.subplots(nrows = 1, ncols = 3)
-sns.boxplot(data = scores, x = "reg_g", y = "mse", hue = "reg_mmd", ax = axs[0])
-sns.boxplot(data = scores, x = "reg_g", y = "mse_norm", hue = "reg_mmd", ax = axs[1])
-sns.boxplot(data = scores, x = "reg_g", y = "pearson", hue = "reg_mmd", ax = axs[2])
-plt.tight_layout()
-
-scores = pd.read_csv("results_snare/scores_l1_quantile.csv")
-import seaborn as sns
-fig = plt.figure(figsize = (30,7))
-axs = fig.subplots(nrows = 1, ncols = 3)
-sns.boxplot(data = scores, x = "reg_g", y = "mse", hue = "reg_mmd", ax = axs[0])
-sns.boxplot(data = scores, x = "reg_g", y = "mse_norm", hue = "reg_mmd", ax = axs[1])
-sns.boxplot(data = scores, x = "reg_g", y = "pearson", hue = "reg_mmd", ax = axs[2])
-plt.tight_layout()
-
-
-fig = plt.figure(figsize = (10,7))
-ax = fig.add_subplot()
-sns.boxplot(data = scores, x = "reg_g", y = "neigh_overlap", hue = "reg_mmd", ax = ax)
-plt.tight_layout()
-
-'''
-# extract gene activity matrix (region, gene)
-GACT = train.infer_gact(model_dict["gene_act"], mask = (coarse_reg != 0), thresh = 1e-6).cpu().numpy()
-# transform into (motif, gene)
-region2motif = pd.read_csv("../data/snare-seq/chromVAR/region2motif.csv", sep = ",", index_col = 0).values
-motif2gene = region2motif.T @ GACT
-# check which motif is regulating which gene
-'''
 
 # %%

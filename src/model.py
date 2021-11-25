@@ -66,6 +66,45 @@ class Encoder(nn.Module):
         x = self.output(x)
         return x
 
+# Encoder
+class Encoder_batches(nn.Module):
+    def __init__(self, features = [1024, 256, 32, 8], dropout_rate = 0.1, negative_slope = 0.2):
+        super(Encoder,self).__init__()
+        
+        self.features = features
+
+        # input layer
+        self.fc_input = FC(
+            features = self.features[0:2],
+            dropout_rate = dropout_rate,
+            negative_slope = negative_slope,
+            use_bias = True            
+        )
+        self.batch_layer = FC(
+            features = [1] + self.features[1],
+            dropout_rate = dropout_rate,
+            negative_slope = negative_slope,
+            use_bias = True
+        )
+
+        if len(self.features) > 3:
+            self.fc = FC(
+                features = self.features[2:-1],
+                dropout_rate = dropout_rate,
+                negative_slope = negative_slope,
+                use_bias = True
+            )
+
+        self.output = nn.Linear(self.features[-2], self.features[-1])
+
+
+    def forward(self, x, batch_id):
+        x = self.fc_input(x) + self.batch_layer(batch_id)
+        if len(self.features) > 3:
+            x = self.fc(x)
+        x = self.output(x)
+        return x
+
 
 # Decoder
 class Decoder(nn.Module):

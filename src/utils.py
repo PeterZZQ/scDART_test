@@ -37,20 +37,20 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
     fig = plt.figure(figsize = figsize)
     if mode == "modality":
         colormap = plt.cm.get_cmap("tab10")
-        ax = fig.add_subplot()
-        ax.scatter(z1[:,0], z1[:,1], color = colormap(1), label = "scRNA-Seq", s = _kwargs["s"], alpha = _kwargs["alpha"])
-        ax.scatter(z2[:,0], z2[:,1], color = colormap(2), label = "scATAC-Seq", s = _kwargs["s"], alpha = _kwargs["alpha"])
-        ax.legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
+        axs = fig.add_subplot()
+        axs.scatter(z1[:,0], z1[:,1], color = colormap(1), label = "scRNA-Seq", s = _kwargs["s"], alpha = _kwargs["alpha"])
+        axs.scatter(z2[:,0], z2[:,1], color = colormap(2), label = "scATAC-Seq", s = _kwargs["s"], alpha = _kwargs["alpha"])
+        axs.legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
         
-        ax.tick_params(axis = "both", which = "major", labelsize = 15)
+        axs.tick_params(axis = "both", which = "major", labelsize = 15)
 
-        ax.set_xlabel(axis_label + " 1", fontsize = 19)
-        ax.set_ylabel(axis_label + " 2", fontsize = 19)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)  
+        axs.set_xlabel(axis_label + " 1", fontsize = 19)
+        axs.set_ylabel(axis_label + " 2", fontsize = 19)
+        axs.spines['right'].set_visible(False)
+        axs.spines['top'].set_visible(False)  
 
     elif mode == "joint":
-        ax = fig.add_subplot()
+        axs = fig.add_subplot()
         cluster_types = set([x for x in np.unique(anno1)]).union(set([x for x in np.unique(anno2)]))
         # cluster_types = ['LMPP', 'CLP', 'MPP', 'HSC', 'MEP', 'CMP']
         cluster_types = sorted(list(cluster_types))
@@ -59,16 +59,16 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
         for i, cluster_type in enumerate(cluster_types):
             index = np.where(anno1 == cluster_type)[0]
             index2 = np.where(anno2 == cluster_type)[0]
-            ax.scatter(np.concatenate((z1[index,0], z2[index2,0])), np.concatenate((z1[index,1],z2[index2,1])), color = colormap(i), label = cluster_type, s = _kwargs["s"], alpha = _kwargs["alpha"])
+            axs.scatter(np.concatenate((z1[index,0], z2[index2,0])), np.concatenate((z1[index,1],z2[index2,1])), color = colormap(i), label = cluster_type, s = _kwargs["s"], alpha = _kwargs["alpha"])
         
-        ax.legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
+        axs.legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
         
-        ax.tick_params(axis = "both", which = "major", labelsize = 15)
+        axs.tick_params(axis = "both", which = "major", labelsize = 15)
 
-        ax.set_xlabel(axis_label + " 1", fontsize = 19)
-        ax.set_ylabel(axis_label + " 2", fontsize = 19)
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)  
+        axs.set_xlabel(axis_label + " 1", fontsize = 19)
+        axs.set_ylabel(axis_label + " 2", fontsize = 19)
+        axs.spines['right'].set_visible(False)
+        axs.spines['top'].set_visible(False)  
 
 
     elif mode == "separate":
@@ -119,6 +119,7 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
         fig.savefig(save, bbox_inches = "tight")
     
     print(save)
+    return fig, axs
 
 
 def plot_latent_pt(z1, z2, pt1, pt2, mode = "joint", save = None, figsize = (20,10), axis_label = "Latent", **kwargs):

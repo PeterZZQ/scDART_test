@@ -143,6 +143,7 @@ reg_g = 1
 reg_mmd = 1
 ts = [30, 50, 70]
 use_potential = True
+norm = "l1"
 
 seed = seeds[0]
 print("Random seed: " + str(seed))
@@ -202,7 +203,7 @@ opt_dict = {"gene_act": opt_genact, "encoder": opt_encoder}
 # training models
 train.match_latent(model = model_dict, opts = opt_dict, dist_atac = dist_atac, dist_rna = dist_rna, 
                 data_loader_rna = train_rna_loader, data_loader_atac = train_atac_loader, n_epochs = EMBED_CONFIG["n_epochs"], 
-                reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = "l1", 
+                reg_mtx = coarse_reg, reg_d = EMBED_CONFIG["reg_d"], reg_g = EMBED_CONFIG["reg_g"], reg_mmd = EMBED_CONFIG["reg_mmd"], use_anchor = EMBED_CONFIG["use_anchor"], norm = norm, 
                 mode = EMBED_CONFIG["l_dist_type"])
 
 with torch.no_grad():
