@@ -52,7 +52,7 @@ latent_dim = latent_dims[0]
 reg_d = reg_ds[0]
 reg_g = reg_gs[1]
 # harder to merge, need to make mmd loss larger
-reg_mmd = reg_mmds[2]
+reg_mmd = reg_mmds[1]
 seed = seeds[0]
 
 learning_rate = 3e-4
@@ -111,10 +111,10 @@ z_rna_pca = z[:z_rna.shape[0],:]
 z_atac_pca = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = label_rna, 
                     anno2 = label_atac, mode = "joint", save = "results_snare/z_joint.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = label_rna, 
                     anno2 = label_atac, mode = "modality", save = "results_snare/z_mod.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 
 
 z_rna, z_atac = palign.match_alignment(z_rna = z_rna, z_atac = z_atac, k = 10)
@@ -129,10 +129,10 @@ z_rna_pca = z[:z_rna.shape[0],:]
 z_atac_pca = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = label_rna, 
                     anno2 = label_atac, mode = "joint", save = "results_snare/z_joint_post.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = label_rna, 
                     anno2 = label_atac, mode = "modality", save = "results_snare/z_mod_post.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 
 umap_op = UMAP(n_components = 2, min_dist = 0.8, random_state = 0)
 z = umap_op.fit_transform(np.concatenate((z_rna, z_atac), axis = 0))
@@ -140,17 +140,17 @@ z_rna_umap = z[:z_rna.shape[0],:]
 z_atac_umap = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = label_rna, 
                     anno2 = label_atac, mode = "joint", save = "results_snare/z_joint_post_umap.png", 
-                    figsize = (10,7), axis_label = "UMAP")
+                    figsize = (15,7), axis_label = "UMAP")
 utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = label_rna, 
                     anno2 = label_atac, mode = "modality", save = "results_snare/z_mod_post_umap.png", 
-                    figsize = (10,7), axis_label = "UMAP")
+                    figsize = (15,7), axis_label = "UMAP")
 
 
 # In[] Plot backbone
 def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = None, figsize = (20,10), axis_label = "Latent", **kwargs):
     _kwargs = {
         "s": 10,
-        "alpha": 0.4,
+        "alpha": 0.7,
         "markerscale": 6,
         "fontsize": 20
     }
@@ -161,12 +161,12 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
     if mode == "joint":
         ax = fig.add_subplot()
         cluster_types = np.sort(np.unique(groups))
-        cmap = plt.cm.get_cmap("tab20", len(np.unique(anno)))
+        cmap = plt.cm.get_cmap("Paired", len(np.unique(anno)))
         z = np.concatenate((z1, z2), axis = 0)
 
         for i, cat in enumerate(np.sort(np.unique(anno))):
             idx = np.where(anno == cat)[0]
-            ax.scatter(z[idx,0], z[idx,1], color = cmap(i), cmap = 'tab20', label = cat, alpha = _kwargs["alpha"], s = _kwargs["s"])
+            ax.scatter(z[idx,0], z[idx,1], color = cmap(i), label = cat, alpha = _kwargs["alpha"], s = _kwargs["s"])
 
         for i in range(T.shape[0]):
             for j in range(T.shape[1]):
@@ -175,9 +175,9 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
         
         ax.scatter(mean_cluster[:,0], mean_cluster[:,1], color = "red", s = 30)
         
-        for i in range(mean_cluster.shape[0]):
-            marker = cluster_types[i].split("_")[0] + "\_" + cluster_types[i].split("_")[1] 
-            ax.plot(mean_cluster[i,0] - 0.007, mean_cluster[i,1] + 0.001, color = "blue", marker=  "$" + marker + "$", markersize = 70)
+        # for i in range(mean_cluster.shape[0]):
+        #     marker = cluster_types[i].split("_")[0] + "\_" + cluster_types[i].split("_")[1] 
+        #     ax.plot(mean_cluster[i,0] - 0.007, mean_cluster[i,1] + 0.001, color = "black", marker=  "$" + marker + "$", markersize = 70)
 
         ax.tick_params(axis = "both", which = "major", labelsize = 15)
 
@@ -186,8 +186,9 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
 
-        ax.legend(bbox_to_anchor=(0.9,1), loc="upper left", fontsize = _kwargs["fontsize"], frameon=False, markerscale = _kwargs["markerscale"])
+        ax.legend(bbox_to_anchor=(1.04,1), loc="upper left", fontsize = _kwargs["fontsize"], frameon=False, markerscale = _kwargs["markerscale"])
 
+    plt.tight_layout()
     if save:
         fig.savefig(save, bbox_inches = "tight")
     
@@ -237,15 +238,22 @@ z_atac_pca = z[z_rna.shape[0]:,:]
 
 cell_labels = np.concatenate((label_rna, label_atac), axis = 0).squeeze()
 groups, mean_cluster, T = backbone_inf(z_rna, z_atac, cell_labels)
-mean_cluster = pca_op.transform(np.array(mean_cluster))
+mean_cluster_pca = pca_op.transform(np.array(mean_cluster))
+# # mean_cluster_pca
+# mean_cluster_pca = [[] for x in range(len(mean_cluster))]
+# for i, cat in enumerate(np.sort(np.unique(cell_labels))):
+#     idx = np.where(cell_labels == cat)[0]
+#     mean_cluster_pca[i] = np.mean(z[idx,:], axis = 0)
+# mean_cluster_pca = np.array(mean_cluster_pca)
 
-plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(10,7), save = "results_snare/backbone.png", anno = cell_labels, axis_label = "PCA")
-utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = "./results_snare/z_pt.png", figsize = (10,7), axis_label = "PCA")
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster_pca, groups = groups, T = T, figsize=(15,7), save = "results_snare/backbone.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = "./results_snare/z_pt.png", figsize = (15,7), axis_label = "PCA")
 
 
 # In[] Infer pseudotime
 # infer backbone with leiden clustering
-groups, mean_cluster, T = ti.backbone_inf(z_rna, z_atac, resolution = 0.05)
+groups, mean_cluster, T = ti.backbone_inf(np.concatenate((z_rna, z_atac), axis = 0), resolution = 0.05)
 groups_rna = groups[:counts_rna.shape[0]]
 groups_atac = groups[counts_rna.shape[0]:]
 root_clust = groups[root_cell]
@@ -293,6 +301,75 @@ for traj in de_genes.keys():
     de_list = pd.DataFrame.from_dict({"feature": genes, "p-val": p_val})
     de_list.to_csv("./results_snare/de_snare/de_gene_" + str(traj) + ".csv")
 
+genes = ["Mki67", "Fabp7", "Eomes", "Unc5d", "Cux1", "Foxp1"]
+ncols = 2
+nrows = np.ceil(len(genes)/2).astype('int32')
+figsize = (20,15)
+X = counts_rna
+de_feats = de_genes
+pseudo_order = pseudo_order_rna
+
+figs = []
+for traj_i in de_feats.keys():
+    # ordering of genes
+    sorted_pt = pseudo_order[traj_i].dropna(axis = 0).sort_values()
+    # ordering = [int(x.split("_")[1]) for x in sorted_pt.index]
+    ordering = sorted_pt.index.values.squeeze()
+    X_traj = X.loc[ordering, :]
+
+    # make plot
+    fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
+    colormap = plt.cm.get_cmap('tab20b', 20)
+    idx = 0
+    for feat in de_feats[traj_i]:
+        if feat["feature"] in genes:
+            # plot log transformed version
+            y = np.squeeze(X_traj.loc[:,feat["feature"]].values)
+            y_null = feat['null']
+            y_pred = feat['regression']
+
+            axs[idx%nrows, idx//nrows].scatter(np.arange(y.shape[0]), y, color = colormap(1), alpha = 0.5)
+            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_pred, color = "black", alpha = 1, linewidth = 4)
+            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_null, color = "red", alpha = 1, linewidth = 4)
+            axs[idx%nrows, idx//nrows].set_title(feat["feature"]) 
+            idx += 1               
+    
+    plt.tight_layout()
+    figs.append(fig)
+    fig.savefig("results_snare/de_snare/de_snare_" + str(traj_i) + ".png", bbox_inches = "tight")
+
+def plot_gene(z, counts, gene, save = None, figsize = (20,10), axis_label = "Latent", **kwargs):
+    _kwargs = {
+        "s": 10,
+        "alpha": 0.9,
+    }
+    _kwargs.update(kwargs)
+
+    fig = plt.figure(figsize = figsize)
+
+    ax = fig.add_subplot()
+    sct = ax.scatter(z[:,0], z[:,1], c = counts.loc[:, gene].values.squeeze(), cmap = plt.get_cmap('gnuplot'), **_kwargs)
+    
+
+    ax.tick_params(axis = "both", which = "major", labelsize = 15)
+
+    ax.set_xlabel(axis_label + " 1", fontsize = 19)
+    ax.set_ylabel(axis_label + " 2", fontsize = 19)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)  
+
+    cbar = fig.colorbar(sct,fraction=0.046, pad=0.04, ax = ax)
+    cbar.ax.tick_params(labelsize = 20)
+
+    if save:
+        fig.savefig(save, bbox_inches = "tight")
+    
+    print(save)
+
+for gene in genes:
+    plot_gene(z_rna_pca, counts_rna, gene, save = None, figsize = (20,10), axis_label = "Latent")
+
+
 # In[] Find de motif
 counts_motif = pd.read_csv("../data/snare-seq-1000/chromVAR/motif_z.csv", index_col = 0)
 
@@ -323,31 +400,83 @@ motif2gene = region2motif_full.values.T @ GACT
 motif2gene = pd.DataFrame(data = motif2gene, index = region2motif.columns.values, columns = counts_rna.columns.values)
 motif2gene.to_csv("results_snare/de_snare/motif2gene_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_" + norm + ".csv")
 
-# In[]
-# First check the Sox6
-gene = "Sox6"
-ordering = np.argsort(motif2gene[gene].values.squeeze())[::-1]
-motif2gene_ordered = motif2gene.iloc[ordering, :]
-motif2gene_ordered = motif2gene_ordered.loc[:, [gene]]
-motif2gene_ordered.to_csv("results_snare/de_snare/1000/motifs_" + gene + ".csv")
+# # In[]
+# # First check the Sox6
+# gene = "Sox6"
+# ordering = np.argsort(motif2gene[gene].values.squeeze())[::-1]
+# motif2gene_ordered = motif2gene.iloc[ordering, :]
+# motif2gene_ordered = motif2gene_ordered.loc[:, [gene]]
+# motif2gene_ordered.to_csv("results_snare/de_snare/1000/motifs_" + gene + ".csv")
 
+# In[]
+from scipy.stats import zscore
 pseudo_rna = model_dict["gene_act"](atac_dataset.counts.to(device)).detach().cpu().numpy()
+pseudo_rna = zscore(pseudo_rna, axis = 0)
 genes = ["Ptprd", "Mki67", "Fabp7", "Top2a", "Mef2c", "Macrod2", "Tenm2", "Dab1", "Tnc", "Frmd4a", "Celf2"]
+# genes = pd.read_csv("results_snare/de_snare/1000/de_gene_traj_0.csv", index_col = 0)
+# genes = genes.iloc[:100,0].values.squeeze()
 pseudo_rna = pd.DataFrame(data = pseudo_rna, index = counts_rna.index.values, columns = counts_rna.columns.values)
 pseudo_rna_sorted = pseudo_rna.iloc[np.argsort(pt_infer_rna), :]
 rna_sorted = counts_rna.iloc[np.argsort(pt_infer_rna), :]
 pseudo_rna_sorted = pseudo_rna_sorted.loc[:, genes]
 rna_sorted = rna_sorted.loc[:, genes]
+rna_sorted = zscore(rna_sorted, axis = 0)
+
 fig = plt.figure(figsize = (20, 7))
 axs = fig.subplots(1, 2)
 sns.heatmap(pseudo_rna_sorted.T, ax = axs[0])
 sns.heatmap(rna_sorted.T, ax = axs[1])
 fig.savefig("results_snare/de_snare/predict_rna.png", bbox_inches = "tight")
 
+score_gact = pd.DataFrame(columns = ["Method", "Gene", "Spearman", "Pearson"])
 for i, gene in enumerate(genes):
     spearman,_ = spearmanr(pseudo_rna_sorted.T.loc[gene,:], rna_sorted.T.loc[gene,:])
     pearson,_ = pearsonr(pseudo_rna_sorted.T.loc[gene,:], rna_sorted.T.loc[gene,:])
     print("gene: {:s}, spearman: {:.4f}, pearson: {:.4f}".format(gene, spearman, pearson))
+    score_gact = score_gact.append({"Method": "scDART", "Gene": gene, "Spearman": spearman, "Pearson": pearson}, ignore_index = True)
+
+# baseline methods
+pseudo_rna2 = (atac_dataset.counts.to(device) @ coarse_reg).detach().cpu().numpy()
+pseudo_rna2 = zscore(pseudo_rna2, axis = 0)
+pseudo_rna2 = pd.DataFrame(data = pseudo_rna2, index = counts_rna.index.values, columns = counts_rna.columns.values)
+pseudo_rna2_sorted = pseudo_rna2.iloc[np.argsort(pt_infer_rna), :]
+pseudo_rna2_sorted = pseudo_rna2_sorted.loc[:, genes]
+
+for i, gene in enumerate(genes):
+    spearman,_ = spearmanr(pseudo_rna2_sorted.T.loc[gene,:], rna_sorted.T.loc[gene,:])
+    pearson,_ = pearsonr(pseudo_rna2_sorted.T.loc[gene,:], rna_sorted.T.loc[gene,:])
+    print("gene: {:s}, spearman: {:.4f}, pearson: {:.4f}".format(gene, spearman, pearson))
+    score_gact = score_gact.append({"Method": "Linear", "Gene": gene, "Spearman": spearman, "Pearson": pearson}, ignore_index = True)
+
+score_gact.to_csv("results_snare/de_snare/spearman.csv")
+
+fig = plt.figure(figsize = (7, 7))
+ax = fig.add_subplot()
+x = score_gact.loc[score_gact["Method"] == "Linear", "Pearson"].values
+y = score_gact.loc[score_gact["Method"] == "scDART", "Pearson"].values
+ax.scatter(x, y)
+
+print("proportion above: {:.2f}".format(np.sum((x < y).astype(int))/x.shape[0]) )
+# for i in range(x.shape[0]):
+#     marker = genes[i]
+#     if len(marker) <= 3:
+#         ax.plot(x[i] + 0.02, y[i] + 0.001, color = "black", marker=  "$" + marker + "$", markersize = 20)
+#     elif len(marker) <= 5:
+#         ax.plot(x[i] + 0.02, y[i] + 0.001, color = "black", marker=  "$" + marker + "$", markersize = 30)
+#     else:
+#         ax.plot(x[i] + 0.02, y[i] + 0.001, color = "black", marker=  "$" + marker + "$", markersize = 45)
+
+# ax.set_yscale('log')
+# ax.set_xscale('log')
+ax.set_xlim([0.001, 0.4])
+ax.set_ylim([0.001, 0.4])
+# ax.set_xticks([0.01, 0.1])
+# ax.set_yticks([0.01, 0.1])
+ax.plot([0, 0.4], [0, 0.4], "r:")
+ax.set_xlabel("Linear")
+ax.set_ylabel("scDART")
+
+fig.savefig("results_snare/de_snare/Pearson.png", bbox_inches = "tight")
 
 # In[] Other baseline methods
 # 1. Liger
@@ -363,17 +492,42 @@ pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_
 umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
 
 fig, axs = utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "joint", save = path + "liger_umap.png", figsize = (10,7), axis_label = "UMAP")
+mode = "joint", save = path + "liger_umap.png", figsize = (15,7), axis_label = "UMAP")
 fig, axs = utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "modality", save = path + "liger_batches_umap.png", figsize = (10,7), axis_label = "UMAP")
+mode = "modality", save = path + "liger_batches_umap.png", figsize = (15,7), axis_label = "UMAP")
 fig, axs = utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "joint", save = None, figsize = (10,7), axis_label = "PCA")
+mode = "joint", save = None, figsize = (15,7), axis_label = "PCA")
 axs.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 fig.savefig(path + "liger_pca.png", bbox_inches = "tight")
 fig, axs = utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "modality", save = path + "liger_batches_pca.png", figsize = (10,7), axis_label = "PCA")
+mode = "modality", save = path + "liger_batches_pca.png", figsize = (15,7), axis_label = "PCA")
 axs.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 fig.savefig(path + "liger_batches_pca.png", bbox_inches = "tight")
+
+# Infer backbone
+root_cell = 450
+dpt_mtx = ti.dpt(np.concatenate((z_rna_liger, z_atac_liger), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_liger.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_liger.shape[0]:]
+
+
+pca_op = PCA(n_components = 2)
+z = pca_op.fit_transform(np.concatenate((z_rna_liger, z_atac_liger), axis = 0))
+z_rna_pca = z[:z_rna_liger.shape[0],:]
+z_atac_pca = z[z_rna_liger.shape[0]:,:]
+
+cell_labels = np.concatenate((label_rna, label_atac), axis = 0).squeeze()
+groups, mean_cluster, T = backbone_inf(z_rna_liger, z_atac_liger, cell_labels)
+mean_cluster = pca_op.transform(np.array(mean_cluster))
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = path + "backbone.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt.png", figsize = (15,7), axis_label = "PCA")
+
 
 # 2. Seurat
 path = "results_snare/seurat/"
@@ -382,20 +536,40 @@ coembed = pd.read_csv(path + "pca_embedding.txt", sep = "\t").values
 z_rna_seurat = coembed[:label_rna.values.shape[0],:]
 z_atac_seurat = coembed[label_rna.values.shape[0]:,:]
 
-utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "modality", figsize = (10,7), axis_label = "PCA", save = path + "seurat_batches_pca.png")
-utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "joint", figsize = (10,7), axis_label = "PCA", save = path + "seurat_pca.png")
+utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "seurat_batches_pca.png")
+utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "seurat_pca.png")
 
-coembed = pd.read_csv(path + "umap_embedding.txt", sep = "\t").values
-z_rna_seurat = coembed[:label_rna.values.shape[0],:]
-z_atac_seurat = coembed[label_rna.values.shape[0]:,:]
-utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "modality", figsize = (10,7), axis_label = "PCA", save = path + "seurat_batches_umap.png")
-utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "joint", figsize = (10,7), axis_label = "PCA", save = path + "seurat_umap.png")
+# coembed = pd.read_csv(path + "umap_embedding.txt", sep = "\t").values
+# z_rna_seurat = coembed[:label_rna.values.shape[0],:]
+# z_atac_seurat = coembed[label_rna.values.shape[0]:,:]
+# utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "seurat_batches_umap.png")
+# utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "seurat_umap.png")
+
+# Infer backbone
+root_cell = 450
+dpt_mtx = ti.dpt(np.concatenate((z_rna_seurat, z_atac_seurat), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_seurat.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_seurat.shape[0]:]
+
+
+cell_labels = np.concatenate((label_rna, label_atac), axis = 0).squeeze()
+groups, mean_cluster, T = backbone_inf(z_rna_seurat, z_atac_seurat, cell_labels)
+
+plot_backbone(z_rna_seurat, z_atac_seurat, mode = "joint", mean_cluster = np.array(mean_cluster), groups = groups, T = T, figsize=(15,7), save = path + "backbone.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_seurat, z2 = z_atac_seurat, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt.png", figsize = (15,7), axis_label = "PCA")
+
+
 
 # 3. unioncom
 path = "results_snare/unioncom/"
 z_rna_unioncom = np.load(path + "unioncom_rna_32.npy")
 z_atac_unioncom = np.load(path + "unioncom_atac_32.npy")
-integrated_data = (z_rna, z_atac)
+integrated_data = (z_rna_unioncom, z_atac_unioncom)
 
 pca_op = PCA(n_components = 2)
 umap_op = UMAP(n_components = 2)
@@ -404,13 +578,37 @@ pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_
 umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
 
 utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "joint", save = path + "unioncom_umap.png", figsize = (10,7), axis_label = "UMAP")
+mode = "joint", save = path + "unioncom_umap.png", figsize = (15,7), axis_label = "UMAP")
 utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "modality", save = path + "unioncom_batches_umap.png", figsize = (10,7), axis_label = "UMAP")
+mode = "modality", save = path + "unioncom_batches_umap.png", figsize = (15,7), axis_label = "UMAP")
 utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "joint", save = path + "unioncom_pca.png", figsize = (10,7), axis_label = "PCA")
+mode = "joint", save = path + "unioncom_pca.png", figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
-mode = "modality", save = path + "unioncom_batches_pca.png", figsize = (10,7), axis_label = "PCA")
+mode = "modality", save = path + "unioncom_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+# Infer backbone
+root_cell = 450
+dpt_mtx = ti.dpt(np.concatenate((z_rna_unioncom, z_atac_unioncom), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_unioncom.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_unioncom.shape[0]:]
+
+
+pca_op = PCA(n_components = 2)
+z = pca_op.fit_transform(np.concatenate((z_rna_unioncom, z_atac_unioncom), axis = 0))
+z_rna_pca = z[:z_rna_unioncom.shape[0],:]
+z_atac_pca = z[z_rna_unioncom.shape[0]:,:]
+
+cell_labels = np.concatenate((label_rna, label_atac), axis = 0).squeeze()
+groups, mean_cluster, T = backbone_inf(z_rna_unioncom, z_atac_unioncom, cell_labels)
+mean_cluster = pca_op.transform(np.array(mean_cluster))
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = path + "backbone.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt.png", figsize = (15,7), axis_label = "PCA")
 
 
 # In[] Neighborhood overlap score, use also the unionCom, LIGER and Seurat
@@ -428,6 +626,10 @@ path = "results_snare/unioncom/"
 z_rna_unioncom = np.load(path + "unioncom_rna_32.npy")
 z_atac_unioncom = np.load(path + "unioncom_atac_32.npy")
 
+path = "results_snare/mmd_ma/"
+z_rna_mmdma = np.load(path + "mmd_ma_rna.npy")
+z_atac_mmdma = np.load(path + "mmd_ma_atac.npy")
+
 path = "results_snare/models_1000/"
 z_rna_scdart = np.load(file = path + "z_rna_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_" + norm + ".npy")
 z_atac_scdart = np.load(file = path + "z_atac_" + str(latent_dim) + "_" + str(reg_d) + "_" + str(reg_g) + "_" + str(reg_mmd) + "_" + str(seed) + "_" + norm + ".npy")
@@ -442,17 +644,20 @@ score_liger = []
 score_seurat = []
 score_unioncom = []
 score_scdart = []
+score_mmdma = []
 
 for k in range(10, 1000, 10):
     score_liger.append(bmk.neigh_overlap(z_rna_liger, z_atac_liger, k = k))
     score_unioncom.append(bmk.neigh_overlap(z_rna_unioncom, z_atac_unioncom, k = k))
     score_seurat.append(bmk.neigh_overlap(z_rna_seurat, z_atac_seurat, k = k))
     score_scdart.append(bmk.neigh_overlap(z_rna_scdart, z_atac_scdart, k = k))
+    score_mmdma.append(bmk.neigh_overlap(z_rna_mmdma, z_atac_mmdma, k = k))
 
 score_liger = np.array(score_liger)
 score_seurat = np.array(score_seurat)
 score_unioncom = np.array(score_unioncom)
 score_scdart = np.array(score_scdart)
+score_mmdma = np.array(score_mmdma)
 
 fig = plt.figure(figsize = (10, 7))
 ax = fig.add_subplot()
@@ -460,6 +665,7 @@ ax.plot(np.arange(10, 1000, 10), score_liger, label = "LIGER")
 ax.plot(np.arange(10, 1000, 10), score_unioncom, label = "UnionCom")
 ax.plot(np.arange(10, 1000, 10), score_seurat, label = "Seurat")
 ax.plot(np.arange(10, 1000, 10), score_scdart, label = "scDART")
+ax.plot(np.arange(10, 1000, 10), score_mmdma, label = "MMD-MA")
 ax.legend()
 ax.set_xlabel("Neighborhood size")
 ax.set_ylabel("Neighborhood overlap")
@@ -502,14 +708,70 @@ pt_infer_seurat = pt_infer_seurat/np.max(pt_infer_seurat)
 spearman_seurat, _ = spearmanr(pt_infer_seurat[:z_rna_seurat.shape[0]], pt_infer_seurat[z_rna_seurat.shape[0]:])
 pearson_seurat, _ = pearsonr(pt_infer_seurat[:z_rna_seurat.shape[0]], pt_infer_seurat[z_rna_seurat.shape[0]:])
 
+# mmd-ma
+dpt_mtx = ti.dpt(np.concatenate((z_rna_mmdma, z_atac_mmdma), axis = 0), n_neigh = 10)
+pt_infer_mmdma = dpt_mtx[root_cell, :]
+pt_infer_mmdma[pt_infer_mmdma.argsort()] = np.arange(len(pt_infer_mmdma))
+pt_infer_mmdma = pt_infer_mmdma/np.max(pt_infer_mmdma)
+spearman_mmdma, _ = spearmanr(pt_infer_mmdma[:z_rna_mmdma.shape[0]], pt_infer_mmdma[z_rna_mmdma.shape[0]:])
+pearson_mmdma, _ = pearsonr(pt_infer_mmdma[:z_rna_mmdma.shape[0]], pt_infer_mmdma[z_rna_mmdma.shape[0]:])
+
 
 # correlation smaller than 0.87, the one reported in the paper.
 print("scDART: spearman: {:.4f}, pearson: {:.4f}".format(spearman_scdart, pearson_scdart))
-print("LIGER: spearman: {:.4f}, pearson: {:.4f}".format(spearman_liger, pearson_scdart))
+print("LIGER: spearman: {:.4f}, pearson: {:.4f}".format(spearman_liger, pearson_liger))
 print("Seurat: spearman: {:.4f}, pearson: {:.4f}".format(spearman_seurat, pearson_seurat))
 print("UnionCom: spearman: {:.4f}, pearson: {:.4f}".format(spearman_unioncom, pearson_unioncom))
+print("MMD-MA: spearman: {:.4f}, pearson: {:.4f}".format(spearman_mmdma, pearson_mmdma))
 
+# plot barplot
+
+def show_values_on_bars(axs):
+    def _show_on_single_plot(ax):        
+        for p in ax.patches:
+            _x = p.get_x() + p.get_width() / 2
+            _y = p.get_y() + p.get_height()
+            value = '{:.4f}'.format(p.get_height())
+            ax.text(_x, _y, value, ha="center") 
+
+    if isinstance(axs, np.ndarray):
+        for idx, ax in np.ndenumerate(axs):
+            _show_on_single_plot(ax)
+    else:
+        _show_on_single_plot(axs)
+
+scores = pd.DataFrame(columns = ["Method", "Spearman", "Pearson"])
+scores["Method"] = np.array(["scDART", "LIGER", "Seurat", "UnionCom", "MMD-MA"])
+scores["Spearman"] = np.array([spearman_scdart, spearman_liger, spearman_seurat, spearman_unioncom, spearman_mmdma])
+scores["Pearson"] = np.array([pearson_scdart, pearson_liger, pearson_seurat, pearson_unioncom, pearson_mmdma])
+import seaborn as sns
+fig = plt.figure(figsize = (15,7))
+ax = fig.subplots(nrows = 1, ncols = 2)
+ax[0] = sns.barplot(data = scores, x = "Method", y = "Spearman", ax = ax[0], color = "blue", alpha = 0.7)
+ax[1] = sns.barplot(data = scores, x = "Method", y = "Pearson", ax = ax[1], color = "blue", alpha = 0.7)
+plt.tight_layout()
+ax[0].set_xticklabels(labels = ["scDART", "LIGER", "Seurat", "UnionCom", "MMD-MA"], rotation = 45)
+ax[1].set_xticklabels(labels = ["scDART", "LIGER", "Seurat", "UnionCom", "MMD-MA"], rotation = 45)
+newwidth = 0.5
+for bar1, bar2 in zip(ax[0].patches, ax[1].patches):
+    x = bar1.get_x()
+    width = bar1.get_width()
+    centre = x+width/2.
+
+    bar1.set_x(centre-newwidth/2.)
+    bar1.set_width(newwidth)
+
+    x = bar2.get_x()
+    width = bar2.get_width()
+    centre = x+width/2.
+
+    bar2.set_x(centre-newwidth/2.)
+    bar2.set_width(newwidth)
+
+show_values_on_bars(ax)
+fig.savefig("results_snare/correlation.png", bbox_inches = "tight")
 # In[] good neighborhood overlap with mmd larger than 15
+'''
 scores = pd.read_csv("results_snare/scores_l1.csv")
 import seaborn as sns
 fig = plt.figure(figsize = (30,7))
@@ -539,12 +801,6 @@ fig = plt.figure(figsize = (10,7))
 ax = fig.add_subplot()
 sns.boxplot(data = scores, x = "reg_g", y = "neigh_overlap", hue = "reg_mmd", ax = ax)
 plt.tight_layout()
-
-
-
-# In[]
-'''
-
 '''
 
 

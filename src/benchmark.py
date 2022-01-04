@@ -87,7 +87,6 @@ def neigh_overlap(z_rna, z_atac, k = 30):
 
 def F1_branches(branches, branches_gt):
     recovery = 0
-    print("recovery\n")
     #  Recovery is the average maximal Jaccard for every cluster in the first set of clusters (the reference trajectory)
     for branch_gt in np.sort(np.unique(branches_gt)):
         # find cells in ground truth branch
@@ -110,7 +109,6 @@ def F1_branches(branches, branches_gt):
     recovery = recovery / np.sort(np.unique(branches_gt)).shape[0] 
 
     relevence = 0
-    print("relevence\n")
     #  Relevence is the average maximal Jaccard for every cluster in the second set of clusters (the predict trajectory)
     for branch in np.sort(np.unique(branches)):
         # find cells in the branch

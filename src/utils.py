@@ -30,7 +30,8 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
     _kwargs = {
         "s": 10,
         "alpha": 0.9,
-        "markerscale": 4
+        "markerscale": 4,
+        "colormap": "Paired"
     }
     _kwargs.update(kwargs)
 
@@ -52,9 +53,8 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
     elif mode == "joint":
         axs = fig.add_subplot()
         cluster_types = set([x for x in np.unique(anno1)]).union(set([x for x in np.unique(anno2)]))
-        # cluster_types = ['LMPP', 'CLP', 'MPP', 'HSC', 'MEP', 'CMP']
         cluster_types = sorted(list(cluster_types))
-        colormap = plt.cm.get_cmap("tab20", len(cluster_types))
+        colormap = plt.cm.get_cmap(_kwargs["colormap"], len(cluster_types))
 
         for i, cluster_type in enumerate(cluster_types):
             index = np.where(anno1 == cluster_type)[0]
@@ -75,7 +75,7 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
         axs = fig.subplots(1,2)
         cluster_types = set([x for x in np.unique(anno1)]).union(set([x for x in np.unique(anno2)]))
         cluster_types = sorted(list(cluster_types))
-        colormap = plt.cm.get_cmap("tab20", len(cluster_types))
+        colormap = plt.cm.get_cmap(_kwargs["colormap"], len(cluster_types))
 
 
         for i, cluster_type in enumerate(cluster_types):
@@ -83,7 +83,7 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
 
             if index.shape[0] != 0:
                 axs[0].scatter(z1[index,0], z1[index,1], color = colormap(i), label = cluster_type, s = _kwargs["s"], alpha = _kwargs["alpha"])
-        axs[0].legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1))
+        axs[0].legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
         axs[0].set_title("scRNA-Seq", fontsize = 25)
 
         axs[0].tick_params(axis = "both", which = "major", labelsize = 15)
@@ -102,7 +102,7 @@ def plot_latent(z1, z2, anno1 = None, anno2 = None, mode = "joint", save = None,
             if index.shape[0] != 0:
                 axs[1].scatter(z2[index,0], z2[index,1], color = colormap(i), label = cluster_type, s = _kwargs["s"], alpha = _kwargs["alpha"])
         # axs[1].axis("off")
-        axs[1].legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1))
+        axs[1].legend(loc='upper left', frameon = False, ncol = 1, bbox_to_anchor=(1.04, 1), markerscale = _kwargs["markerscale"])
         axs[1].set_title("scATAC-Seq", fontsize = 25)
 
         axs[1].tick_params(axis = "both", which = "major", labelsize = 15)

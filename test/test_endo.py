@@ -155,10 +155,10 @@ z_rna_pca = z[:z_rna.shape[0],:]
 z_atac_pca = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "joint", save = "results_endo/z_joint.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "modality", save = "results_endo/z_mod.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 
 # post-maching
 # with torch.no_grad():
@@ -201,10 +201,10 @@ z_rna_pca = z[:z_rna.shape[0],:]
 z_atac_pca = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "joint", save = "results_endo/z_joint_post.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(z1 = z_rna_pca, z2 = z_atac_pca, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "modality", save = "results_endo/z_mod_post.png", 
-                    figsize = (10,7), axis_label = "PCA")
+                    figsize = (15,7), axis_label = "PCA")
 
 umap_op = UMAP(n_components = 2, min_dist = 0.8, random_state = 0)
 z = umap_op.fit_transform(np.concatenate((z_rna, z_atac), axis = 0))
@@ -212,16 +212,16 @@ z_rna_umap = z[:z_rna.shape[0],:]
 z_atac_umap = z[z_rna.shape[0]:,:]
 utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "joint", save = "results_endo/z_joint_post_umap.png", 
-                    figsize = (10,7), axis_label = "UMAP")
+                    figsize = (15,7), axis_label = "UMAP")
 utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = rna_dataset.cell_labels, 
                     anno2 = atac_dataset.cell_labels, mode = "modality", save = "results_endo/z_mod_post_umap.png", 
-                    figsize = (10,7), axis_label = "UMAP")
+                    figsize = (15,7), axis_label = "UMAP")
 
 # In[]
 def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = None, figsize = (20,10), axis_label = "Latent", **kwargs):
     _kwargs = {
         "s": 10,
-        "alpha": 0.4,
+        "alpha": 0.7,
         "markerscale": 6,
         "fontsize": 20
     }
@@ -232,12 +232,12 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
     if mode == "joint":
         ax = fig.add_subplot()
         cluster_types = np.sort(np.unique(groups))
-        cmap = plt.cm.get_cmap("tab20", len(np.unique(anno)))
+        cmap = plt.cm.get_cmap("Paired", len(np.unique(anno)))
         z = np.concatenate((z1, z2), axis = 0)
 
         for i, cat in enumerate(np.sort(np.unique(anno))):
             idx = np.where(anno == cat)[0]
-            ax.scatter(z[idx,0], z[idx,1], color = cmap(i), cmap = 'tab20', label = cat, alpha = _kwargs["alpha"], s = _kwargs["s"])
+            ax.scatter(z[idx,0], z[idx,1], color = cmap(i), label = cat, alpha = _kwargs["alpha"], s = _kwargs["s"])
 
         for i in range(T.shape[0]):
             for j in range(T.shape[1]):
@@ -247,14 +247,8 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
         ax.scatter(mean_cluster[:,0], mean_cluster[:,1], color = "red", s = 30)
         
         for i in range(mean_cluster.shape[0]):
-            if (cluster_types[i] == "HE") or (cluster_types[i] == "IAC"):
-                ax.plot(mean_cluster[i,0] - 0.07, mean_cluster[i,1] + 0.01, color = "blue", marker=  "$" + cluster_types[i] + "$", markersize = 20)
-            # elif (cluster_types[i] == "Arterial endo 1") or (cluster_types[i] == "Arterial endo 2") or (cluster_types[i] == "Endo (other)"):
-            #     ax.plot(mean_cluster[i,0] - 0.07, mean_cluster[i,1] + 0.01, color = "blue", marker=  "$" + cluster_types[i] + "$", markersize = 70)
-            elif (cluster_types[i] == "Arterial endo 1&2"):
-                ax.plot(mean_cluster[i,0] - 0.07, mean_cluster[i,1] + 0.01, color = "blue", marker=  "$" + "Arterial\,endo\,1&2" + "$", markersize = 90)
-            else:
-                ax.plot(mean_cluster[i,0] - 0.07, mean_cluster[i,1] + 0.01, color = "blue", marker=  "$" + cluster_types[i] + "$", markersize = 60)
+            marker = cluster_types[i]
+            ax.plot(mean_cluster[i,0] - 0.007, mean_cluster[i,1] + 0.001, color = "black", marker=  "$" + marker + "$", markersize = 70)
 
         ax.tick_params(axis = "both", which = "major", labelsize = 15)
 
@@ -263,8 +257,9 @@ def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = 
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
 
-        ax.legend(bbox_to_anchor=(0.9,1), loc="upper left", fontsize = _kwargs["fontsize"], frameon=False, markerscale = _kwargs["markerscale"])
+        ax.legend(bbox_to_anchor=(1.04,1), loc="upper left", fontsize = _kwargs["fontsize"], frameon=False, markerscale = _kwargs["markerscale"])
 
+    plt.tight_layout()
     if save:
         fig.savefig(save, bbox_inches = "tight")
     
@@ -310,6 +305,10 @@ dpt_mtx = ti.dpt(np.concatenate((z_rna, z_atac), axis = 0), n_neigh = 10)
 pt_infer = dpt_mtx[root_cell, :]
 pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
 pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna.shape[0]:]
 
 
 pca_op = PCA(n_components = 2)
@@ -322,7 +321,208 @@ cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Ar
 groups, mean_cluster, T = backbone_inf(z_rna, z_atac, cell_labels2)
 mean_cluster = pca_op.transform(np.array(mean_cluster))
 
-plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(10,7), save = "results_endo/backbone.png", anno = cell_labels, axis_label = "PCA")
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = "results_endo/backbone_full.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = "./results_endo/z_pt.png", figsize = (10,7), axis_label = "PCA")
+
+# In[] Other baseline methods
+# 1. Liger
+path = "results_endo/liger/"
+z_rna_liger = pd.read_csv(path + "H1.csv", index_col = 0)
+z_atac_liger = pd.read_csv(path + "H2.csv", index_col = 0)
+integrated_data = (z_rna_liger.values, z_atac_liger.values)
+
+pca_op = PCA(n_components = 2)
+umap_op = UMAP(n_components = 2)
+
+counts_rna = pd.read_csv("../data/Endo/counts_rna.csv", index_col = 0)
+counts_atac = pd.read_csv("../data/Endo/counts_atac.csv", index_col = 0)
+anno_rna = pd.read_csv("../data/Endo/anno_rna.txt", header = None)
+anno_rna.index = counts_rna.index.values
+anno_atac = pd.read_csv("../data/Endo/anno_atac.txt", header = None)
+anno_atac.index = counts_atac.index.values
+anno_rna = anno_rna.loc[z_rna_liger.index.values,:]
+anno_atac = anno_atac.loc[z_atac_liger.index.values,:]
+
+pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+
+utils.plot_latent(umap_latent[:z_rna_liger.shape[0],:], umap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "liger_umap.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(umap_latent[:z_rna_liger.shape[0],:], umap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "liger_batches_umap.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(pca_latent[:z_rna_liger.shape[0],:], pca_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "liger_pca.png", figsize = (15,7), axis_label = "PCA")
+utils.plot_latent(pca_latent[:z_rna_liger.shape[0],:], pca_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "liger_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+# Infer backbone
+root_cell = 35
+dpt_mtx = ti.dpt(np.concatenate((z_rna_liger, z_atac_liger), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_liger.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_liger.shape[0]:]
+
+
+pca_op = PCA(n_components = 2)
+z = pca_op.fit_transform(np.concatenate((z_rna_liger, z_atac_liger), axis = 0))
+z_rna_pca = z[:z_rna_liger.shape[0],:]
+z_atac_pca = z[z_rna_liger.shape[0]:,:]
+
+cell_labels = np.concatenate((rna_dataset.cell_labels, atac_dataset.cell_labels), axis = 0).squeeze()
+cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Arterial endo 2"), "Arterial endo 1&2", cell_labels)
+groups, mean_cluster, T = backbone_inf(z_rna_liger, z_atac_liger, cell_labels2)
+mean_cluster = pca_op.transform(np.array(mean_cluster))
+
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = path + "backbone2.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt.png", figsize = (15,7), axis_label = "PCA")
+
+
+z_rna_liger = pd.read_csv(path + "H1_full.csv", index_col = 0)
+z_atac_liger = pd.read_csv(path + "H2_full.csv", index_col = 0)
+integrated_data = (z_rna_liger.values, z_atac_liger.values)
+
+pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+
+utils.plot_latent(umap_latent[:z_rna_liger.shape[0],:], umap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "liger_umap_full.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(umap_latent[:z_rna_liger.shape[0],:], umap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "liger_batches_umap_full.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(pca_latent[:z_rna_liger.shape[0],:], pca_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "liger_pca_full.png", figsize = (15,7), axis_label = "PCA")
+utils.plot_latent(pca_latent[:z_rna_liger.shape[0],:], pca_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "liger_batches_pca_full.png", figsize = (15,7), axis_label = "PCA")
+
+# Infer backbone
+root_cell = 35
+dpt_mtx = ti.dpt(np.concatenate((z_rna_liger, z_atac_liger), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_liger.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_liger.shape[0]:]
+
+
+pca_op = PCA(n_components = 2)
+z = pca_op.fit_transform(np.concatenate((z_rna_liger, z_atac_liger), axis = 0))
+z_rna_pca = z[:z_rna_liger.shape[0],:]
+z_atac_pca = z[z_rna_liger.shape[0]:,:]
+
+cell_labels = np.concatenate((rna_dataset.cell_labels, atac_dataset.cell_labels), axis = 0).squeeze()
+cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Arterial endo 2"), "Arterial endo 1&2", cell_labels)
+groups, mean_cluster, T = backbone_inf(z_rna_liger, z_atac_liger, cell_labels2)
+mean_cluster = pca_op.transform(np.array(mean_cluster))
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = path + "backbone_full.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt_full.png", figsize = (15,7), axis_label = "PCA")
+
+
+
+# In[] 2. Seurat
+path = "results_endo/seurat/"
+# anno_rna = pd.read_csv("../data/Endo/anno_rna.txt", header = None).values
+# anno_atac = pd.read_csv("../data/Endo/anno_atac.txt", header = None).values
+coembed = pd.read_csv(path + "pca_embedding.txt", sep = "\t").values
+
+z_rna_seurat = coembed[:anno_rna.shape[0],:]
+z_atac_seurat = coembed[anno_rna.shape[0]:,:]
+utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "pca.png")
+utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "pca_joint.png")
+
+# Infer backbone
+root_cell = 35
+dpt_mtx = ti.dpt(np.concatenate((z_rna_seurat, z_atac_seurat), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_seurat.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_seurat.shape[0]:]
+
+cell_labels = np.concatenate((rna_dataset.cell_labels, atac_dataset.cell_labels), axis = 0).squeeze()
+cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Arterial endo 2"), "Arterial endo 1&2", cell_labels)
+groups, mean_cluster, T = backbone_inf(z_rna_seurat, z_atac_seurat, cell_labels2)
+
+plot_backbone(z_rna_seurat, z_atac_seurat, mode = "joint", mean_cluster = np.array(mean_cluster), groups = groups, T = T, figsize=(15,7), save = path + "backbone.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_seurat, z2 = z_atac_seurat, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt.png", figsize = (15,7), axis_label = "PCA")
+
+
+coembed = pd.read_csv(path + "pca_embedding_full.txt", sep = "\t").values
+z_rna_seurat = coembed[:anno_rna.shape[0],:]
+z_atac_seurat = coembed[anno_rna.shape[0]:,:]
+
+utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "pca_full.png")
+utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "pca_joint_full.png")
+
+# Infer backbone
+root_cell = 35
+dpt_mtx = ti.dpt(np.concatenate((z_rna_seurat, z_atac_seurat), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_seurat.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_seurat.shape[0]:]
+
+cell_labels = np.concatenate((rna_dataset.cell_labels, atac_dataset.cell_labels), axis = 0).squeeze()
+cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Arterial endo 2"), "Arterial endo 1&2", cell_labels)
+groups, mean_cluster, T = backbone_inf(z_rna_seurat, z_atac_seurat, cell_labels2)
+
+plot_backbone(z_rna_seurat, z_atac_seurat, mode = "joint", mean_cluster = np.array(mean_cluster), groups = groups, T = T, figsize=(15,7), save = path + "backbone_full.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_seurat, z2 = z_atac_seurat, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt_full.png", figsize = (15,7), axis_label = "PCA")
+
+# In[] 3. UnionCom
+path = "results_endo/unioncom/"
+z_rna_unioncom = np.load(path + "lat_rna.npy")
+z_atac_unioncom = np.load(path + "lat_atac.npy")
+integrated_data = (z_rna_unioncom, z_atac_unioncom)
+
+pca_op = PCA(n_components = 2)
+umap_op = UMAP(n_components = 2)
+
+pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+
+utils.plot_latent(umap_latent[:z_rna_unioncom.shape[0],:], umap_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "unioncom_umap.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(umap_latent[:z_rna_unioncom.shape[0],:], umap_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "unioncom_batches_umap.png", figsize = (15,7), axis_label = "UMAP")
+utils.plot_latent(pca_latent[:z_rna_unioncom.shape[0],:], pca_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "unioncom_pca.png", figsize = (15,7), axis_label = "PCA")
+utils.plot_latent(pca_latent[:z_rna_unioncom.shape[0],:], pca_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "unioncom_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+# Infer backbone
+root_cell = 35
+dpt_mtx = ti.dpt(np.concatenate((z_rna_unioncom, z_atac_unioncom), axis = 0), n_neigh = 10)
+pt_infer = dpt_mtx[root_cell, :]
+pt_infer[pt_infer.argsort()] = np.arange(len(pt_infer))
+pt_infer = pt_infer/np.max(pt_infer)
+# for scRNA-Seq batch
+pt_infer_rna = pt_infer[:z_rna_unioncom.shape[0]]
+# for scATAC-Seq batch
+pt_infer_atac = pt_infer[z_rna_unioncom.shape[0]:]
+pca_op = PCA(n_components = 2)
+z = pca_op.fit_transform(np.concatenate((z_rna_unioncom, z_atac_unioncom), axis = 0))
+z_rna_pca = z[:z_rna_unioncom.shape[0],:]
+z_atac_pca = z[z_rna_unioncom.shape[0]:,:]
+cell_labels = np.concatenate((rna_dataset.cell_labels, atac_dataset.cell_labels), axis = 0).squeeze()
+cell_labels2 = np.where((cell_labels == "Arterial endo 1") | (cell_labels == "Arterial endo 2"), "Arterial endo 1&2", cell_labels)
+groups, mean_cluster, T = backbone_inf(z_rna_unioncom, z_atac_unioncom, cell_labels2)
+mean_cluster = pca_op.transform(np.array(mean_cluster))
+
+plot_backbone(z_rna_pca, z_atac_pca, mode = "joint", mean_cluster = mean_cluster, groups = groups, T = T, figsize=(15,7), save = path + "backbone_full.png", anno = cell_labels, axis_label = "PCA")
+utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = path + "z_pt_full.png", figsize = (15,7), axis_label = "PCA")
+
 
 # In[] Find de genes
 counts_rna = pd.read_csv("../data/Endo/counts_rna.csv", index_col = 0)
@@ -347,7 +547,7 @@ pt_infer_rna = pt_infer[:counts_rna.shape[0]]
 pt_infer_atac = pt_infer[counts_rna.shape[0]:]
 
 # infer backbone
-groups, mean_cluster, T = ti.backbone_inf(z_rna, z_atac, resolution = 0.02)
+groups, mean_cluster, T = ti.backbone_inf(np.concatenate((z_rna, z_atac), axis = 0), resolution = 0.02)
 groups_rna = groups[:counts_rna.shape[0]]
 groups_atac = groups[counts_rna.shape[0]:]
 root_clust = groups[root_cell]
@@ -377,7 +577,7 @@ for i, path in enumerate(paths):
     pseudo_order_rna.iloc[selected_cells, i] = pt_infer_rna[selected_cells]
 
 # Find de genes, normal distribution after log-transform
-de_genes = de.de_analy(X = counts_rna, pseudo_order = pseudo_order_rna, p_val_t = 0.05, verbose = False, distri = "normal", fdr_correct = True)
+de_genes = de.de_analy_para(X = counts_rna, pseudo_order = pseudo_order_rna, p_val_t = 0.05, verbose = False, distri = "normal", fdr_correct = True)
 for traj in de_genes.keys():
     genes = np.array([x["feature"] for x in de_genes[traj]])
     p_val = np.array([x["p_val"] for x in de_genes[traj]])
@@ -387,8 +587,6 @@ for traj in de_genes.keys():
     de_list.to_csv("./results_endo/de_endo/de_gene_" + str(traj) + ".csv")
 
 de.de_plot(X = counts_rna, pseudo_order = pseudo_order_rna, de_feats = de_genes, figsize = (20,50), n_feats = 20)
-
-utils.plot_latent_pt(z1 = z_rna_pca, z2 = z_atac_pca, pt1 = pt_infer_rna, pt2 = pt_infer_atac, mode = "joint", save = "./results_endo/z_pt.png", figsize = (10,7), axis_label = "PCA")
 
 # In[] Find de regions
 # infer backbone
@@ -418,10 +616,22 @@ de.de_plot(X = counts_atac, pseudo_order = pseudo_order_atac, de_feats = de_regi
 
 
 # In[] Find de motif
+counts_atac = pd.read_csv("../data/Endo/counts_atac.csv", index_col = 0)
+
+pseudo_order_atac = np.empty((groups_atac.shape[0], len(paths)))
+pseudo_order_atac[:] = np.nan
+pseudo_order_atac = pd.DataFrame(data = pseudo_order_atac, index = counts_atac.index.values, columns = np.array(["traj_" + str(x) for x in range(len(paths))]))
+
+for i, path in enumerate(paths):
+    # find all the cells in the path
+    selected_cells = np.concatenate([np.where(groups_atac == x)[0] for x in path], axis = 0)
+    # insert pseudotime of the found cells into pseudo_order
+    pseudo_order_atac.iloc[selected_cells, i] = pt_infer_atac[selected_cells]
+
 counts_motif = pd.read_csv("../data/Endo/chromVAR/motif_z.csv", index_col = 0)
 
 # Find de regions, binomial distribution
-de_motifs = de.de_analy(X = counts_motif, pseudo_order = pseudo_order_atac, p_val_t = 0.05, verbose = False, distri = "normal", fdr_correct = True)
+de_motifs = de.de_analy_para(X = counts_motif, pseudo_order = pseudo_order_atac, p_val_t = 0.05, verbose = False, distri = "normal", fdr_correct = True)
 for traj in de_motifs.keys():
     motifs = np.array([x["feature"] for x in de_motifs[traj]])
     p_val = np.array([x["p_val"] for x in de_motifs[traj]])
@@ -431,94 +641,5 @@ for traj in de_motifs.keys():
     de_list.to_csv("./results_endo/de_endo/de_motif_" + str(traj) + ".csv")
 
 de.de_plot(X = counts_motif, pseudo_order = pseudo_order_atac, de_feats = de_motifs, figsize = (20,50), n_feats = 20)
-
-
-
-# In[] Other baseline methods
-# 1. Liger
-path = "./results_endo/"
-z_rna = pd.read_csv("results_endo/liger/H1.csv", index_col = 0)
-z_atac = pd.read_csv("results_endo/liger/H2.csv", index_col = 0)
-integrated_data = (z_rna.values, z_atac.values)
-
-pca_op = PCA(n_components = 2)
-umap_op = UMAP(n_components = 2)
-
-counts_rna = pd.read_csv("../data/Endo/counts_rna.csv", index_col = 0)
-counts_atac = pd.read_csv("../data/Endo/counts_atac.csv", index_col = 0)
-anno_rna = pd.read_csv("../data/Endo/anno_rna.txt", header = None)
-anno_rna.index = counts_rna.index.values
-anno_atac = pd.read_csv("../data/Endo/anno_atac.txt", header = None)
-anno_atac.index = counts_atac.index.values
-anno_rna = anno_rna.loc[z_rna.index.values,:]
-anno_atac = anno_atac.loc[z_atac.index.values,:]
-
-pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/liger/liger_umap.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/liger/liger_batches_umap.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/liger/liger_pca.png", figsize = (10,7), axis_label = "PCA")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/liger/liger_batches_pca.png", figsize = (10,7), axis_label = "PCA")
-
-
-z_rna = pd.read_csv("results_endo/liger/H1_full.csv", index_col = 0)
-z_atac = pd.read_csv("results_endo/liger/H2_full.csv", index_col = 0)
-integrated_data = (z_rna.values, z_atac.values)
-
-pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/liger/liger_umap_full.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/liger/liger_batches_umap_full.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/liger/liger_pca_full.png", figsize = (10,7), axis_label = "PCA")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/liger/liger_batches_pca_full.png", figsize = (10,7), axis_label = "PCA")
-
-
-
-# In[] 2. Seurat
-# anno_rna = pd.read_csv("../data/Endo/anno_rna.txt", header = None).values
-# anno_atac = pd.read_csv("../data/Endo/anno_atac.txt", header = None).values
-coembed = pd.read_csv("results_endo/seurat/pca_embedding.txt", sep = "\t").values
-coembed_full = pd.read_csv("results_endo/seurat/pca_embedding_full.txt", sep = "\t").values
-rna_embed = coembed[:anno_rna.shape[0],:]
-atac_embed = coembed[anno_rna.shape[0]:,:]
-rna_embed_full = coembed_full[:anno_rna.shape[0],:]
-atac_embed_full = coembed_full[anno_rna.shape[0]:,:]
-
-utils.plot_latent(rna_embed, atac_embed, anno_rna, anno_atac, mode = "modality", figsize = (10,7), axis_label = "PCA", save = "results_endo/seurat/pca.png")
-utils.plot_latent(rna_embed, atac_embed, anno_rna, anno_atac, mode = "joint", figsize = (10,7), axis_label = "PCA", save = "results_endo/seurat/pca_joint.png")
-
-
-utils.plot_latent(rna_embed_full, atac_embed_full, anno_rna, anno_atac, mode = "modality", figsize = (10,7), axis_label = "PCA", save = "results_endo/seurat/pca_full.png")
-utils.plot_latent(rna_embed_full, atac_embed_full, anno_rna, anno_atac, mode = "joint", figsize = (10,7), axis_label = "PCA", save = "results_endo/seurat/pca_joint_full.png")
-
-# In[] 3. UnionCom
-z_rna = np.load("results_endo/unioncom/lat_rna.npy")
-z_atac = np.load("results_endo/unioncom/lat_atac.npy")
-integrated_data = (z_rna, z_atac)
-
-pca_op = PCA(n_components = 2)
-umap_op = UMAP(n_components = 2)
-
-pca_latent = pca_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-umap_latent = umap_op.fit_transform(np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
-
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/unioncom/unioncom_umap.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(umap_latent[:z_rna.shape[0],:], umap_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/unioncom/unioncom_batches_umap.png", figsize = (10,7), axis_label = "UMAP")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "joint", save = "results_endo/unioncom/unioncom_pca.png", figsize = (10,7), axis_label = "PCA")
-utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
-mode = "modality", save = "results_endo/unioncom/unioncom_batches_pca.png", figsize = (10,7), axis_label = "PCA")
 
 # %%

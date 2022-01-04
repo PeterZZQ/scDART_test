@@ -10,7 +10,7 @@ from torch import autograd
 
 def _train_mmd(model, opts, b_x_rna, b_x_atac, reg_mtx, dist_atac, dist_rna, 
                anchor_idx_rna, anchor_idx_atac, reg_anchor,
-               reg_d, reg_g, reg_mmd, norm, mode):
+               reg_d, reg_g, reg_mmd, norm, mode, device):
     """\
     Description:
     ------------
@@ -47,7 +47,7 @@ def _train_mmd(model, opts, b_x_rna, b_x_atac, reg_mtx, dist_atac, dist_rna,
         loss_anchor = reg_anchor * torch.norm(torch.mean(b_z_atac[anchor_idx_atac,:], dim = 0) - torch.mean(b_z_rna[anchor_idx_rna,:], dim = 0))
         loss_total += loss_anchor
     else:
-        loss_anchor = torch.tensor(0.0)
+        loss_anchor = torch.tensor(0.0).to(device)
     loss_total.backward()
 
     opts["gene_act"].step()
@@ -61,9 +61,7 @@ def _train_mmd(model, opts, b_x_rna, b_x_atac, reg_mtx, dist_atac, dist_rna,
 
 def match_latent(model, opts, dist_atac, dist_rna, data_loader_rna, data_loader_atac, 
                  n_epochs, reg_mtx, reg_d = 1, reg_g = 1, reg_mmd = 1, use_anchor = False, 
-                 norm = "l1", mode = "kl"):
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+                 norm = "l1", mode = "kl", device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
 
     reg_mtx = reg_mtx.type(torch.bool)
     batch_size = data_loader_rna.batch_size
@@ -98,11 +96,11 @@ def match_latent(model, opts, dist_atac, dist_rna, data_loader_rna, data_loader_
             # do not allow batch size 1
             if use_anchor and (min(b_x_atac[b_anchor_atac,:].shape[0], b_x_rna[b_anchor_rna,:].shape[0]) > 1):
                 losses = _train_mmd(model, opts, b_x_rna, b_x_atac, reg_mtx, b_dist_atac, b_dist_rna, anchor_idx_atac = b_anchor_atac, anchor_idx_rna = b_anchor_rna, 
-                reg_anchor = 1, reg_d = reg_d, reg_g = reg_g, reg_mmd = reg_mmd, norm = norm, mode = mode)
+                reg_anchor = 1, reg_d = reg_d, reg_g = reg_g, reg_mmd = reg_mmd, norm = norm, mode = mode, device = device)
             
             else:
                 losses = _train_mmd(model, opts, b_x_rna, b_x_atac, reg_mtx, b_dist_atac, b_dist_rna, anchor_idx_atac = None, anchor_idx_rna = None,
-                reg_anchor = 0, reg_d = reg_d, reg_g = reg_g, reg_mmd = reg_mmd, norm = norm, mode = mode)
+                reg_anchor = 0, reg_d = reg_d, reg_g = reg_g, reg_mmd = reg_mmd, norm = norm, mode = mode, device = device)
 
 
             ave_loss_mmd += losses["loss_mmd"]

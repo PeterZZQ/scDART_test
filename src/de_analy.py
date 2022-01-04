@@ -211,9 +211,9 @@ def de_plot(X, pseudo_order, de_feats, figsize = (20,40), n_feats = 20):
             y_null = feat['null']
             y_pred = feat['regression']
 
-            axs[idx%nrows, idx//nrows].scatter(np.arange(y.shape[0]), y, color = colormap(idx), alpha = 0.7)
-            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_pred, color = "black", alpha = 1)
-            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_null, color = "red", alpha = 1)
+            axs[idx%nrows, idx//nrows].scatter(np.arange(y.shape[0]), y, color = colormap(1), alpha = 0.5)
+            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_pred, color = "black", alpha = 1, linewidth = 4)
+            axs[idx%nrows, idx//nrows].plot(np.arange(y.shape[0]), y_null, color = "red", alpha = 1, linewidth = 4)
             axs[idx%nrows, idx//nrows].set_title(feat["feature"])                
         
         plt.tight_layout()
