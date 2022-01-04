@@ -1,0 +1,8 @@
+motif,TF-sub-class,Biological process
+MA0035.3_Gata1,GATA1,immune system process;cell differentiation
+MA0482.1_Gata4,GATA4,cell differentiation
+MA0002.2_RUNX1,RUNX1,immune system process;cell differentiation
+MA0087.1_Sox5,SOX,cell differentiation
+MA0480.1_Foxo1,FOX,cell differentiation
+
+# source http://www.informatics.jax.org/marker
