@@ -8,7 +8,7 @@ library(Matrix)
 library(patchwork)
 # library(EnsDb.Hsapiens.v86)
 
-setwd("~/Documents/xsede/scDART_full_test/test")
+# setwd("~/Documents/xsede/scDART_full_test/test")
 ################################################
 #
 # Using Raw data
