@@ -40,6 +40,9 @@ import seaborn as sns
 from adjustText import adjust_text
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+import scanpy as sc 
+import anndata 
+
 plt.rcParams["font.size"] = 20
 
 # In[] scan and find the one with the highest neighborhood overlap score
@@ -146,6 +149,24 @@ utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = label_rna,
                     anno2 = label_atac, mode = "modality", save = "results_snare/z_mod_post_umap.png", 
                     figsize = (15,7), axis_label = "UMAP")
 
+
+# # run diffusion map
+# adata_scdart = anndata.AnnData(X = np.concatenate((z_rna,z_atac), axis = 0))
+# # adata_scdart = anndata.AnnData(X = np.concatenate((z_rna_pca,z_atac_pca), axis = 0))
+
+# sc.pp.neighbors(adata_scdart, use_rep = 'X', n_neighbors = 30, random_state = 0)
+# sc.tl.diffmap(adata_scdart, random_state = 0)
+# diffmap_latent = adata_scdart.obsm["X_diffmap"]
+# utils.plot_latent(diffmap_latent[:z_rna.shape[0],:], diffmap_latent[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+# mode = "joint", save = "results_snare/z_joint_post_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+# utils.plot_latent(diffmap_latent[:z_rna.shape[0],:], diffmap_latent[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+# mode = "modality", save = "results_snare/z_mod_post_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load("results_snare/models_1000/z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna, anno2 = label_atac, 
+mode = "joint", save = "results_snare/z_joint_post_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna, anno2 = label_atac, 
+mode = "modality", save = "results_snare/z_mod_post_destiny.png", figsize = (15,7), axis_label = "Diffmap")
 
 # In[] Plot backbone
 def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = None, figsize = (20,10), axis_label = "Latent", **kwargs):
@@ -738,6 +759,12 @@ mode = "modality", save = path + "liger_batches_pca.png", figsize = (15,7), axis
 axs.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 fig.savefig(path + "liger_batches_pca.png", bbox_inches = "tight")
 
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "joint", save = path + "liger_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "modality", save = path + "liger_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+
 # Infer backbone
 root_cell = 450
 dpt_mtx = ti.dpt(np.concatenate((z_rna_liger, z_atac_liger), axis = 0), n_neigh = 10)
@@ -775,9 +802,14 @@ utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.valu
 coembed = pd.read_csv(path + "pca_embedding.txt", sep = "\t").values
 z_rna_seurat = coembed[:label_rna.values.shape[0],:]
 z_atac_seurat = coembed[label_rna.values.shape[0]:,:]
-
 utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "seurat_batches_pca.png")
 utils.plot_latent(z_rna_seurat, z_atac_seurat, label_rna.values, label_atac.values, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "seurat_pca.png")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "joint", save = path + "destiny_joint.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "modality", save = path + "destiny.png", figsize = (15,7), axis_label = "Diffmap")
 
 # Infer backbone
 root_cell = 450
@@ -882,6 +914,12 @@ mode = "joint", save = path + "unioncom_pca.png", figsize = (15,7), axis_label =
 utils.plot_latent(pca_latent[:z_rna.shape[0],:], pca_latent[z_rna.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
 mode = "modality", save = path + "unioncom_batches_pca.png", figsize = (15,7), axis_label = "PCA")
 
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "joint", save = path + "unioncom_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "modality", save = path + "unioncom_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+
 # Infer backbone
 root_cell = 450
 dpt_mtx = ti.dpt(np.concatenate((z_rna_unioncom, z_atac_unioncom), axis = 0), n_neigh = 10)
@@ -973,6 +1011,12 @@ utils.plot_latent(pca_latent[:z_rna_scJoint.shape[0],:], pca_latent[z_rna_scJoin
 mode = "joint", save = path + "scjoint_pca.png", figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(pca_latent[:z_rna_scJoint.shape[0],:], pca_latent[z_rna_scJoint.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
 mode = "modality", save = path + "scjoint_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "joint", save = path + "scjoint_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = label_rna.values, anno2 = label_atac.values, 
+mode = "modality", save = path + "scjoint_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
 
 # Infer backbone
 root_cell = 450

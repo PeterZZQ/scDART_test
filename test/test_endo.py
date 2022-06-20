@@ -39,6 +39,9 @@ from scipy.sparse import load_npz
 from adjustText import adjust_text
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+import scanpy as sc 
+import anndata 
+
 plt.rcParams["font.size"] = 20
 
 # In[]
@@ -218,6 +221,25 @@ utils.plot_latent(z1 = z_rna_umap, z2 = z_atac_umap, anno1 = rna_dataset.cell_la
                     anno2 = atac_dataset.cell_labels, mode = "modality", save = "results_endo/z_mod_post_umap.png", 
                     figsize = (15,7), axis_label = "UMAP")
 
+# run diffusion map
+adata_scdart = anndata.AnnData(X = np.concatenate((z_rna,z_atac), axis = 0))
+# adata_scdart = anndata.AnnData(X = np.concatenate((z_rna_pca,z_atac_pca), axis = 0))
+
+sc.pp.neighbors(adata_scdart, use_rep = 'X', n_neighbors = 30, random_state = 0)
+sc.tl.diffmap(adata_scdart, random_state = 0)
+diffmap_latent = adata_scdart.obsm["X_diffmap"]
+utils.plot_latent(diffmap_latent[:z_rna.shape[0],:], diffmap_latent[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = "results_endo/z_joint_post_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(diffmap_latent[:z_rna.shape[0],:], diffmap_latent[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = "results_endo/z_mod_post_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load("results_endo/z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = "results_endo/z_joint_post_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = "results_endo/z_mod_post_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+
+
 # In[]
 def plot_backbone(z1, z2, T, mean_cluster, groups, anno, mode = "joint", save = None, figsize = (20,10), axis_label = "Latent", **kwargs):
     _kwargs = {
@@ -359,6 +381,22 @@ mode = "joint", save = path + "liger_pca.png", figsize = (15,7), axis_label = "P
 utils.plot_latent(pca_latent[:z_rna_liger.shape[0],:], pca_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
 mode = "modality", save = path + "liger_batches_pca.png", figsize = (15,7), axis_label = "PCA")
 
+# run diffusion map
+adata_liger = anndata.AnnData(X = np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+sc.pp.neighbors(adata_liger, use_rep = 'X', n_neighbors = 30, random_state = 0)
+sc.tl.diffmap(adata_liger, random_state = 0)
+diffmap_latent = adata_liger.obsm["X_diffmap"]
+utils.plot_latent(diffmap_latent[:z_rna_liger.shape[0],:], diffmap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "liger_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(diffmap_latent[:z_rna_liger.shape[0],:], diffmap_latent[z_rna_liger.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "liger_batches_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = path + "liger_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = path + "liger_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+
 # Infer backbone
 root_cell = 35
 dpt_mtx = ti.dpt(np.concatenate((z_rna_liger, z_atac_liger), axis = 0), n_neigh = 10)
@@ -447,6 +485,28 @@ z_rna_seurat = coembed[:anno_rna.shape[0],:]
 z_atac_seurat = coembed[anno_rna.shape[0]:,:]
 utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "modality", figsize = (15,7), axis_label = "PCA", save = path + "pca.png")
 utils.plot_latent(z_rna_seurat, z_atac_seurat, anno_rna, anno_atac, mode = "joint", figsize = (15,7), axis_label = "PCA", save = path + "pca_joint.png")
+
+umap_op = UMAP(min_dist = 0.1, n_neighbors = 5)
+z_seurat_umap = umap_op.fit_transform(np.concatenate((z_rna_seurat, z_atac_seurat), axis = 0))
+utils.plot_latent(z_seurat_umap[:anno_rna.shape[0],:], z_seurat_umap[anno_rna.shape[0]:,:], anno_rna, anno_atac, mode = "modality", figsize = (15,7), axis_label = "PCA", save = None)
+utils.plot_latent(z_seurat_umap[:anno_rna.shape[0],:], z_seurat_umap[anno_rna.shape[0]:,:], anno_rna, anno_atac, mode = "joint", figsize = (15,7), axis_label = "PCA", save = None)
+
+
+# run diffusion map
+adata_seurat = anndata.AnnData(X = coembed)
+sc.pp.neighbors(adata_seurat, use_rep = 'X', n_neighbors = 30, random_state = 0)
+sc.tl.diffmap(adata_seurat, random_state = 0)
+diffmap_latent = adata_seurat.obsm["X_diffmap"]
+utils.plot_latent(diffmap_latent[:z_rna_seurat.shape[0],:], diffmap_latent[z_rna_seurat.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "diffmap_joint.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(diffmap_latent[:z_rna_seurat.shape[0],:], diffmap_latent[z_rna_seurat.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = path + "destiny_joint.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna.shape[0],:], z_destiny[z_rna.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = path + "destiny.png", figsize = (15,7), axis_label = "Diffmap")
 
 # Infer backbone
 root_cell = 35
@@ -541,6 +601,22 @@ utils.plot_latent(pca_latent[:z_rna_unioncom.shape[0],:], pca_latent[z_rna_union
 mode = "joint", save = path + "unioncom_pca.png", figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(pca_latent[:z_rna_unioncom.shape[0],:], pca_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
 mode = "modality", save = path + "unioncom_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+# run diffusion map
+adata_unioncom = anndata.AnnData(X = np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+sc.pp.neighbors(adata_unioncom, use_rep = 'X', n_neighbors = 30, random_state = 0)
+sc.tl.diffmap(adata_unioncom, random_state = 0)
+diffmap_latent = adata_unioncom.obsm["X_diffmap"]
+utils.plot_latent(diffmap_latent[:z_rna_unioncom.shape[0],:], diffmap_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "unioncom_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(diffmap_latent[:z_rna_unioncom.shape[0],:], diffmap_latent[z_rna_unioncom.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "unioncom_batches_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = path + "unioncom_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = path + "unioncom_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
 
 # Infer backbone
 root_cell = 35
@@ -639,6 +715,23 @@ utils.plot_latent(pca_latent[:z_rna_scJoint.shape[0],:], pca_latent[z_rna_scJoin
 mode = "joint", save = path + "scjoint_pca.png", figsize = (15,7), axis_label = "PCA")
 utils.plot_latent(pca_latent[:z_rna_scJoint.shape[0],:], pca_latent[z_rna_scJoint.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
 mode = "modality", save = path + "scjoint_batches_pca.png", figsize = (15,7), axis_label = "PCA")
+
+# run diffusion map
+adata_scjoint = anndata.AnnData(X = np.concatenate((integrated_data[0],integrated_data[1]), axis = 0))
+sc.pp.neighbors(adata_scjoint, use_rep = 'X', n_neighbors = 30, random_state = 0)
+sc.tl.diffmap(adata_scjoint, random_state = 0)
+diffmap_latent = adata_scjoint.obsm["X_diffmap"]
+utils.plot_latent(diffmap_latent[:z_rna_scJoint.shape[0],:], diffmap_latent[z_rna_scJoint.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "joint", save = path + "scjoint_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(diffmap_latent[:z_rna_scJoint.shape[0],:], diffmap_latent[z_rna_scJoint.shape[0]:,:], anno1 = anno_rna.values, anno2 = anno_atac.values, 
+mode = "modality", save = path + "scjoint_batches_diffmap.png", figsize = (15,7), axis_label = "Diffmap")
+
+z_destiny = np.load(path + "z_diffmap.npy")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "joint", save = path + "scjoint_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+utils.plot_latent(z_destiny[:z_rna_unioncom.shape[0],:], z_destiny[z_rna_unioncom.shape[0]:,:], anno1 = rna_dataset.cell_labels, anno2 = atac_dataset.cell_labels, 
+mode = "modality", save = path + "scjoint_batches_destiny.png", figsize = (15,7), axis_label = "Diffmap")
+
 
 # Infer backbone
 root_cell = 35
